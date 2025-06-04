@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  scan_server:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: uvicorn mcp_servers.scan_server:app --host 0.0.0.0 --port 8000 --reload
+
+  subdomain_server:
+    build: .
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+    command: uvicorn mcp_servers.subdomain_server:app --host 0.0.0.0 --port 8000 --reload 
