@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  scan_server:
+  banzai_scan_server:
     build: .
     ports:
       - "8000:8000"
@@ -9,10 +7,29 @@ services:
       - .:/app
     command: uvicorn mcp_servers.scan_server:app --host 0.0.0.0 --port 8000 --reload
 
-  subdomain_server:
+  banzai_subdomain_server:
     build: .
     ports:
       - "8001:8000"
     volumes:
       - .:/app
-    command: uvicorn mcp_servers.subdomain_server:app --host 0.0.0.0 --port 8000 --reload 
+    command: uvicorn mcp_servers.subdomain_server:app --host 0.0.0.0 --port 8000 --reload
+
+  banzai_dns_analysis_server:
+    build: .
+    ports:
+      - "8002:8000"
+    volumes:
+      - .:/app
+    command: uvicorn mcp_servers.dns_analysis_server:app --host 0.0.0.0 --port 8000 --reload
+
+  banzai_supabase_mcp:
+    build: .
+    ports:
+      - "8003:8003"
+    volumes:
+      - .:/app
+    environment:
+      - SUPABASE_PROJECT_REF=${SUPABASE_PROJECT_REF}
+      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN}
+    command: uvicorn mcp_servers.supabase_mcp_wrapper:app --host 0.0.0.0 --port 8003 --reload 

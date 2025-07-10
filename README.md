@@ -1,15 +1,44 @@
-# AI-Powered External Attack Surface Testing Tool
+# BanzAI - AI-Powered External Attack Surface Testing Tool
 
 ## Quick Start
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+1. **Set up your Supabase project**
+   - Create a project at https://supabase.com/
+   - Get your `SUPABASE_URL` and `SUPABASE_ANON_KEY` from the Supabase dashboard
+
+2. **Create a `.env` file** in the project root with your Supabase credentials:
+   ```env
+   SUPABASE_PROJECT_REF=your_project_ref_here
+   SUPABASE_ACCESS_TOKEN=your_personal_access_token_here
    ```
-2. Run a port scan:
+   
+   To get these values:
+   - Go to your Supabase project dashboard
+   - **Project Ref**: Found in Settings > General > Reference ID
+   - **Access Token**: Create a personal access token in your Supabase account settings
+
+3. **Start all services with Docker Compose**
    ```bash
-   python src/cli_main.py scan --target 127.0.0.1 --ports 1-1000
+   docker-compose up --build
    ```
+   This will start all BanzAI services:
+   - `banzai_scan_server` (Port 8000): Network port scanning
+   - `banzai_subdomain_server` (Port 8001): Subdomain enumeration  
+   - `banzai_dns_analysis_server` (Port 8002): DNS analysis
+   - `banzai_supabase_mcp` (Port 8003): Database integration via Supabase MCP
+
+4. **Integration Layer**
+   - The tool uses a Python integration layer (`src/database/supabase_integration.py`) to interact with the Supabase MCP server for all database operations.
+   - This works for both AI-powered and local LLM workflows.
+
+5. **Usage**
+   - All database operations (projects, assets, scans, findings) are persisted in your Supabase instance via the MCP server.
+   - No manual Node.js or MCP server installation is required for end users.
+
+**Note:** 
+- The `.env` file is automatically ignored by Git to protect your sensitive credentials.
+- All dependencies (Python and Node.js) are installed automatically during Docker build.
+- No manual npm or pip installation steps are required.
 
 ## Project Overview
 
