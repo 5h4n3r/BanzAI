@@ -1,181 +1,335 @@
-# BanzAI - AI-Powered External Attack Surface Testing Tool
+# 🚀 BanzAI - AI-Powered Penetration Testing Tool
 
-## Quick Start
+**BanzAI** is a comprehensive, modular penetration testing platform that combines powerful reconnaissance tools with AI-driven analysis and persistent data storage. Built with a microservices architecture using MCP (Model Context Protocol) servers, it provides enterprise-grade security testing capabilities.
 
-1. **Set up your Supabase project**
-   - Create a project at https://supabase.com/
-   - Get your `SUPABASE_URL` and `SUPABASE_ANON_KEY` from the Supabase dashboard
+## 🌟 Features
 
-2. **Create a `.env` file** in the project root with your Supabase credentials:
-   ```env
-   SUPABASE_PROJECT_REF=your_project_ref_here
-   SUPABASE_ACCESS_TOKEN=your_personal_access_token_here
-   ```
-   
-   To get these values:
-   - Go to your Supabase project dashboard
-   - **Project Ref**: Found in Settings > General > Reference ID
-   - **Access Token**: Create a personal access token in your Supabase account settings
+### 🔍 **Reconnaissance & Discovery**
+- **Port Scanning**: Advanced nmap-based scanning with service detection
+- **Subdomain Enumeration**: Using Subfinder for comprehensive subdomain discovery
+- **DNS Analysis**: Deep DNS reconnaissance with DNSX
+- **Directory Fuzzing**: Web path discovery using ffuf
 
-3. **Start all services with Docker Compose**
-   ```bash
-   docker-compose up --build
-   ```
-   This will start all BanzAI services:
-   - `banzai_scan_server` (Port 8000): Network port scanning
-   - `banzai_subdomain_server` (Port 8001): Subdomain enumeration  
-   - `banzai_dns_analysis_server` (Port 8002): DNS analysis
-   - `banzai_supabase_mcp` (Port 8003): Database integration via Supabase MCP
+### 🗄️ **Data Persistence**
+- **Supabase Integration**: Cloud-native PostgreSQL database
+- **Structured Data Model**: Comprehensive schema for projects, assets, scans, and findings
+- **Real-time Updates**: Live data synchronization across all tools
 
-4. **Integration Layer**
-   - The tool uses a Python integration layer (`src/database/supabase_integration.py`) to interact with the Supabase MCP server for all database operations.
-   - This works for both AI-powered and local LLM workflows.
+### 🏗️ **Modular Architecture**
+- **MCP Servers**: Independent microservices for each tool
+- **Docker Containerization**: Easy deployment and scaling
+- **RESTful APIs**: Standardized interfaces for all operations
 
-5. **Usage**
-   - All database operations (projects, assets, scans, findings) are persisted in your Supabase instance via the MCP server.
-   - No manual Node.js or MCP server installation is required for end users.
+### 🎯 **Use Cases**
+- **Security Assessments**: Comprehensive penetration testing workflows
+- **Asset Discovery**: Automated reconnaissance and mapping
+- **Vulnerability Research**: Structured data collection and analysis
+- **Red Team Operations**: Coordinated attack surface mapping
 
-**Note:** 
-- The `.env` file is automatically ignored by Git to protect your sensitive credentials.
-- All dependencies (Python and Node.js) are installed automatically during Docker build.
-- No manual npm or pip installation steps are required.
+## 🚀 Quick Start
 
-## Project Overview
+### Prerequisites
+- Docker and Docker Compose
+- Supabase account and project
+- Go 1.24+ (for tool compilation)
 
-Develop a comprehensive Python-based penetration testing framework that leverages AI and Model Context Protocol (MCP) servers for automated external attack surface assessment. The tool should integrate seamlessly with Claude Desktop and support local LLM alternatives.
+### 1. Clone and Setup
+```bash
+git clone <repository-url>
+cd banzai
+```
 
-## Core Objectives
+### 2. Configure Environment
+Create a `.env` file with your Supabase credentials:
+```bash
+SUPABASE_PROJECT_REF=your_project_ref
+SUPABASE_ACCESS_TOKEN=your_access_token
+```
 
-### Primary Features
+### 3. Build and Start Services
+```bash
+docker-compose up --build
+```
 
-- **Port Scanning & Service Detection**: Comprehensive TCP/UDP port scanning with service fingerprinting
-- **Subdomain Discovery**: Multiple enumeration techniques (DNS brute force, certificate transparency, search engines)
-- **DNS Analysis**: Zone transfers, DNS record enumeration, subdomain takeover detection
-- **Attack Surface Mapping**: Web application discovery, technology stack identification
-- **Vulnerability Assessment**: Basic vulnerability scanning and security misconfigurations
-- **Reporting**: AI-generated executive summaries and technical findings
+### 4. Initialize Database
+```bash
+# The database schema will be automatically created on first run
+# You can also manually initialize it via the API
+```
 
-### AI Integration Requirements
+## 📖 Usage
 
-- **Claude Desktop Compatibility**: Primary AI interface through Claude Desktop MCP
-- **Local LLM Support**: Fallback option for offline/private deployments
-- **Intelligent Analysis**: AI-driven result correlation and prioritization
-- **Natural Language Queries**: Allow users to ask questions about discovered assets
-- **Automated Reporting**: AI-generated findings summaries and recommendations
+### Command Line Interface
 
-## Technical Architecture
+BanzAI provides a comprehensive CLI for orchestrating reconnaissance workflows:
 
-### Development Environment
+```bash
+# Full reconnaissance workflow
+python src/cli_main.py recon example.com "Example Project"
 
-- **Primary IDE**: Cursor with integrated MCP servers
-- **Language**: Python 3.9+
-- **MCP Integration**: Native MCP server support for tool interactions
-- **Database**: Supabase for centralized data storage and sharing
+# Quick port scan
+python src/cli_main.py scan 192.168.1.1 --type quick
 
-### MCP Server Integration
+# Subdomain enumeration
+python src/cli_main.py subdomains example.com
 
-1. **Core MCP Servers**:
-    - Custom penetration testing MCP server
-    - Supabase MCP server for data persistence
-    - GitHub MCP server for version control and collaboration
-2. **Cursor-Specific Integration**:
-    - Leverage Cursor's built-in MCP capabilities
-    - Code generation and debugging assistance
-    - Real-time collaboration features
+# Directory fuzzing
+python src/cli_main.py fuzz https://example.com --wordlist common
 
-## Development Roadmap
+# Project management
+python src/cli_main.py projects --list
+python src/cli_main.py projects --create "New Project" --target example.com
+```
 
-### Phase 1: Foundation & MCP Integration (Weeks 1-2)
+### API Endpoints
 
-- [ ]  Set up basic Python project structure
-- [ ]  Implement core MCP server for penetration testing tools
-- [ ]  Establish Claude Desktop connectivity
-- [ ]  Create basic CLI interface
-- [ ]  Test AI interaction workflows
+Each MCP server exposes RESTful APIs:
 
-### Phase 2: Core Reconnaissance Features (Weeks 3-4)
+#### Port Scanner (Port 8000)
+```bash
+# Quick scan
+curl -X POST http://localhost:8000/scan/quick -H "Content-Type: application/json" \
+  -d '{"target": "192.168.1.1"}'
 
-- [ ]  Port scanning module (nmap integration)
-- [ ]  Subdomain discovery engine
-- [ ]  DNS enumeration capabilities
-- [ ]  Basic service detection
-- [ ]  Results storage in local database
+# Web services scan
+curl -X POST http://localhost:8000/scan/web -H "Content-Type: application/json" \
+  -d '{"target": "example.com"}'
 
-### Phase 3: Database Integration (Week 5)
+# Custom scan
+curl -X POST http://localhost:8000/scan -H "Content-Type: application/json" \
+  -d '{"target": "192.168.1.1", "ports": "1-1000", "scan_type": "tcp"}'
+```
 
-- [ ]  Supabase MCP server integration
-- [ ]  Data models for assets, scans, and findings
-- [ ]  Sync between local and cloud storage
-- [ ]  Multi-user collaboration features
+#### Subdomain Enumeration (Port 8001)
+```bash
+curl -X POST http://localhost:8001/enumerate -H "Content-Type: application/json" \
+  -d '{"domain": "example.com"}'
+```
 
-### Phase 4: Advanced Features (Weeks 6-7)
+#### DNS Analysis (Port 8002)
+```bash
+curl -X POST http://localhost:8002/analyze -H "Content-Type: application/json" \
+  -d '{"domain": "example.com"}'
+```
 
-- [ ]  Web application discovery
-- [ ]  Technology stack identification
-- [ ]  Basic vulnerability scanning
-- [ ]  Screenshot and visual reconnaissance
-- [ ]  AI-powered result correlation
+#### Directory Fuzzer (Port 8004)
+```bash
+curl -X POST http://localhost:8004/fuzz -H "Content-Type: application/json" \
+  -d '{"target": "https://example.com", "wordlist": "common"}'
+```
 
-### Phase 5: Reporting & Analysis (Week 8)
+## 🏗️ Architecture
 
-- [ ]  AI-generated executive summaries
-- [ ]  Technical report generation
-- [ ]  Risk prioritization algorithms
-- [ ]  Export capabilities (PDF, JSON, XML)
+### MCP Servers
 
-### Phase 6: Security Hardening (Weeks 9-10)
+BanzAI uses a microservices architecture with specialized MCP servers:
 
-- [ ]  Input validation and sanitization
-- [ ]  Rate limiting and throttling
-- [ ]  Secure credential management
-- [ ]  Audit logging
-- [ ]  Docker containerization evaluation
+1. **Scan Server** (`banzai_scan_server`)
+   - Port scanning with nmap
+   - Service detection and version identification
+   - NSE script execution
 
-## Key Requirements
+2. **Subdomain Server** (`banzai_subdomain_server`)
+   - Subdomain enumeration with Subfinder
+   - DNS resolution and validation
 
-### Technical Specifications
+3. **DNS Analysis Server** (`banzai_dns_analysis_server`)
+   - Comprehensive DNS reconnaissance
+   - Record type analysis
 
-- **Performance**: Async/await for concurrent operations
-- **Reliability**: Robust error handling and retry mechanisms
-- **Extensibility**: Plugin architecture for custom modules
-- **Security**: Secure handling of credentials and sensitive data
-- **Compliance**: Responsible disclosure guidelines and legal considerations
+4. **Directory Fuzzer** (`banzai_directory_fuzzer`)
+   - Web path discovery with ffuf
+   - Multiple wordlist support
+   - Configurable scanning parameters
 
-### Integration Points
+5. **Supabase MCP Wrapper** (`banzai_supabase_mcp`)
+   - Database integration layer
+   - Real-time data synchronization
 
-- **Claude Desktop**: Primary AI interface via MCP
-- **Local LLM**: Ollama or similar for offline capabilities
-- **Cursor IDE**: Development environment with MCP integration
-- **Supabase**: Cloud database for persistent storage
-- **GitHub**: Version control and collaboration via MCP
+### Database Schema
 
-### Data Models
+The database uses a comprehensive schema with the following main entities:
 
-- **Assets**: IPs, domains, subdomains, services
-- **Scans**: Scan metadata, timestamps, configurations
-- **Findings**: Vulnerabilities, misconfigurations, notes
-- **Reports**: AI-generated summaries and recommendations
+- **Projects**: Organize reconnaissance activities
+- **Assets**: Store discovered targets (domains, IPs, subdomains)
+- **Scans**: Track scan metadata and results
+- **Services**: Store discovered services and their details
+- **Web Endpoints**: Store discovered web paths
+- **Findings**: Store security findings and vulnerabilities
 
-## Success Criteria
+## 🔧 Configuration
 
-1. Successfully scan and enumerate external attack surfaces
-2. Seamless AI integration for analysis and reporting
-3. Stable MCP server communication
-4. Reliable data persistence and sharing
-5. User-friendly interface accessible via Claude Desktop
-6. Comprehensive documentation and testing
+### Environment Variables
 
-## Important Notes
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SUPABASE_PROJECT_REF` | Your Supabase project reference | Yes |
+| `SUPABASE_ACCESS_TOKEN` | Your Supabase access token | Yes |
 
-- **Authorization Required**: Tool must only be used on systems you own or have explicit written permission to test
-- **Legal Compliance**: Ensure all activities comply with local laws and regulations
-- **Responsible Use**: Implement safeguards against unauthorized usage
-- **Documentation**: Maintain clear usage guidelines and ethical considerations
+### Docker Configuration
 
-## Future Enhancements
+The `docker-compose.yml` file defines all services:
 
-- Container orchestration for MCP servers
-- Advanced AI model fine-tuning
-- Integration with threat intelligence feeds
-- Mobile companion application
-- Enterprise dashboard and analytics
+```yaml
+services:
+  banzai_scan_server:        # Port 8000
+  banzai_subdomain_server:   # Port 8001
+  banzai_dns_analysis_server: # Port 8002
+  banzai_supabase_mcp:       # Port 8003
+  banzai_directory_fuzzer:   # Port 8004
+```
+
+### Tool Configuration
+
+Each tool can be configured via environment variables or API parameters:
+
+- **Nmap**: Timing templates, scan types, NSE scripts
+- **Subfinder**: Sources, resolvers, rate limiting
+- **ffuf**: Wordlists, threads, rate limiting, status codes
+
+## 📊 Data Model
+
+### Projects
+```sql
+CREATE TABLE projects (
+    id UUID PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    target_domain TEXT,
+    status TEXT DEFAULT 'active',
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### Assets
+```sql
+CREATE TABLE assets (
+    id UUID PRIMARY KEY,
+    project_id UUID REFERENCES projects(id),
+    type TEXT NOT NULL, -- 'domain', 'subdomain', 'ip', 'url'
+    value TEXT NOT NULL,
+    status TEXT DEFAULT 'discovered',
+    metadata JSONB,
+    discovered_at TIMESTAMP
+);
+```
+
+### Scans
+```sql
+CREATE TABLE scans (
+    id UUID PRIMARY KEY,
+    project_id UUID REFERENCES projects(id),
+    asset_id UUID REFERENCES assets(id),
+    scan_type TEXT NOT NULL, -- 'port_scan', 'subdomain_enum', 'dns_analysis', 'dir_fuzz'
+    status TEXT DEFAULT 'pending',
+    configuration JSONB,
+    results JSONB,
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP
+);
+```
+
+## 🛠️ Development
+
+### Local Development Setup
+
+1. **Install Dependencies**
+```bash
+pip install -r requirements.txt
+npm install
+```
+
+2. **Start Individual Services**
+```bash
+# Start Supabase MCP wrapper
+python mcp_servers/supabase_mcp_wrapper.py
+
+# Start scan server
+python mcp_servers/scan_server.py
+
+# Start other services...
+```
+
+3. **Run Tests**
+```bash
+python -m pytest tests/
+```
+
+### Adding New Tools
+
+1. **Create MCP Server**
+```python
+# mcp_servers/new_tool_server.py
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class ToolRequest(BaseModel):
+    target: str
+    # Add other parameters
+
+@app.post("/tool")
+async def run_tool(request: ToolRequest):
+    # Implement tool logic
+    pass
+```
+
+2. **Add to Docker Compose**
+```yaml
+banzai_new_tool:
+  build: .
+  ports:
+    - "8005:8005"
+  command: python mcp_servers/new_tool_server.py
+```
+
+3. **Update CLI**
+```python
+# Add to BanzAICLI class
+async def new_tool(self, target: str, project_id: Optional[str] = None):
+    # Implement tool integration
+    pass
+```
+
+## 🔒 Security Considerations
+
+- **Authorization**: Implement proper access controls for production use
+- **Rate Limiting**: Configure appropriate rate limits for external tools
+- **Data Privacy**: Ensure sensitive data is properly handled and encrypted
+- **Network Security**: Use VPNs and secure networks for testing
+- **Legal Compliance**: Always obtain proper authorization before testing
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+- **Issues**: Use GitHub Issues for bug reports and feature requests
+- **Documentation**: Check the docs/ directory for detailed documentation
+- **Community**: Join our Discord/Telegram for community support
+
+## 🎯 Roadmap
+
+- [ ] **Vulnerability Scanning**: Integration with tools like Nuclei
+- [ ] **Web Application Testing**: Burp Suite integration
+- [ ] **AI Analysis**: Machine learning for finding prioritization
+- [ ] **Reporting**: Automated report generation
+- [ ] **Team Collaboration**: Multi-user support
+- [ ] **API Security**: OAuth2 and API key management
+- [ ] **Cloud Integration**: AWS, Azure, GCP reconnaissance
+- [ ] **Mobile Testing**: Android/iOS application testing
+
+---
+
+**BanzAI** - Empowering security professionals with AI-driven reconnaissance and testing capabilities. 🚀

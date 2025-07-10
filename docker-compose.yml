@@ -32,4 +32,14 @@ services:
     environment:
       - SUPABASE_PROJECT_REF=${SUPABASE_PROJECT_REF}
       - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN}
-    command: uvicorn mcp_servers.supabase_mcp_wrapper:app --host 0.0.0.0 --port 8003 --reload 
+    command: uvicorn mcp_servers.supabase_mcp_wrapper:app --host 0.0.0.0 --port 8003 --reload
+
+  banzai_directory_fuzzer:
+    build: .
+    ports:
+      - "8004:8004"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/src
+    command: python mcp_servers/directory_fuzzer_server.py 

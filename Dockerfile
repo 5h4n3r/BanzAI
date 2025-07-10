@@ -21,9 +21,10 @@ RUN wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
 
-# Install Subfinder and DNSX
+# Install Subfinder, DNSX, and ffuf
 RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+RUN go install -v github.com/ffuf/ffuf@latest
 
 # Set working directory
 WORKDIR /app
