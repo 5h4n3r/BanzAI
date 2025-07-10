@@ -31,6 +31,7 @@ async def health_check():
 async def scan(request: ScanRequest):
     """Perform port scanning with enhanced options"""
     try:
+        print(f"[INFO] Starting scan for target: {request.target}")
         result = await scanner.scan_target(
             request.target, 
             request.ports,
@@ -39,21 +40,27 @@ async def scan(request: ScanRequest):
             service_detection=request.service_detection,
             script_scan=request.script_scan
         )
+        print(f"[INFO] Scan completed for {request.target}: {len(result.open_ports)} open ports found")
         return result.dict()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"[ERROR] Scan failed for {request.target}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
 
 @app.post("/scan/quick")
 async def quick_scan(target: str):
     """Quick scan of common ports"""
-    request = ScanRequest(
-        target=target,
-        ports="21-23,25,53,80,110,111,135,139,143,443,993,995,1723,3306,3389,5900,8080",
-        scan_type="tcp",
-        timing=3,
-        service_detection=True
-    )
-    return await scan(request)
+    try:
+        request = ScanRequest(
+            target=target,
+            ports="21-23,25,53,80,110,111,135,139,143,443,993,995,1723,3306,3389,5900,8080",
+            scan_type="tcp",
+            timing=3,
+            service_detection=True
+        )
+        return await scan(request)
+    except Exception as e:
+        print(f"[ERROR] Quick scan failed for {target}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Quick scan failed: {str(e)}")
 
 @app.post("/scan/web")
 async def web_scan(target: str):

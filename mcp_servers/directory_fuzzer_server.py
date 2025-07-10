@@ -12,7 +12,6 @@ import os
 from typing import List, Dict, Optional, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-import aiofiles
 
 app = FastAPI()
 
@@ -250,7 +249,7 @@ async def fuzz_directory(request: DirectoryFuzzRequest):
     """Perform directory fuzzing"""
     try:
         result = await fuzzer.fuzz_directory(request)
-        return result.dict()
+        return result.model_dump()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -274,7 +273,7 @@ async def quick_fuzz(target: str):
     
     try:
         result = await fuzzer.fuzz_directory(request)
-        return result.dict()
+        return result.model_dump()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

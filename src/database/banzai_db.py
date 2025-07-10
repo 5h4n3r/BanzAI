@@ -9,6 +9,7 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime
 from uuid import UUID, uuid4
 import aiohttp
+import sys
 
 from .models import (
     Project, ProjectCreate, ProjectResponse,
@@ -40,16 +41,78 @@ class BanzAIDatabase:
         if not self.session:
             raise RuntimeError("Database session not initialized. Use async context manager.")
         
+        # Handle parameter substitution for MCP server (doesn't support $1, $2 style)
+        if params and "params" in params:
+            param_values = params["params"]
+            # Replace $1, $2, etc. with actual values
+            for i, value in enumerate(param_values, 1):
+                if value is None:
+                    # Handle NULL values
+                    query = query.replace(f"${i}", "NULL")
+                elif isinstance(value, str):
+                    # Escape single quotes in strings
+                    escaped_value = value.replace("'", "''")
+                    query = query.replace(f"${i}", f"'{escaped_value}'")
+                else:
+                    query = query.replace(f"${i}", str(value))
+        
         async with self.session.post(
             f"{self.supabase_url}/query",
-            json={"query": query, "params": params or {}}
+            json={"query": query}
         ) as response:
             if response.status != 200:
                 error_text = await response.text()
                 raise Exception(f"Database query failed: {error_text}")
             
             result = await response.json()
-            return result
+            
+            # Check for error responses first
+            if "result" in result and "isError" in result["result"] and result["result"]["isError"]:
+                # Handle error response
+                if "content" in result["result"]:
+                    content_text = result["result"]["content"][0]["text"]
+                    try:
+                        error_data = json.loads(content_text)
+                        if "error" in error_data:
+                            raise Exception(f"Database error: {error_data['error']['message']}")
+                    except json.JSONDecodeError:
+                        raise Exception(f"Database error: {content_text}")
+                else:
+                    raise Exception("Database error: Unknown error response")
+            
+            # Parse successful MCP response format
+            if "result" in result and "content" in result["result"]:
+                content_text = result["result"]["content"][0]["text"]
+                
+                # The content_text is a JSON string, so we need to unescape it first
+                try:
+                    unescaped_text = json.loads(content_text)
+                except json.JSONDecodeError:
+                    unescaped_text = content_text
+                
+                # Check if it's wrapped in untrusted-data tags
+                import re
+                # Look for the pattern: <untrusted-data-xxx>\n[JSON_DATA]\n</untrusted-data-xxx>
+                data_match = re.search(r'<untrusted-data-[^>]+>\s*\n(.*?)\s*\n\s*</untrusted-data-[^>]+>', unescaped_text, re.DOTALL)
+                
+                if data_match:
+                    # Extract data from untrusted-data wrapper
+                    actual_data = data_match.group(1).strip()
+                    try:
+                        parsed_data = json.loads(actual_data)
+                        return {"result": parsed_data}
+                    except json.JSONDecodeError:
+                        return {"result": actual_data}
+                else:
+                    # Direct JSON in text field
+                    try:
+                        parsed_data = json.loads(unescaped_text)
+                        return {"result": parsed_data}
+                    except json.JSONDecodeError:
+                        return {"result": unescaped_text}
+            else:
+                # Fallback to direct result
+                return result
     
     async def _execute_table_operation(self, table: str, operation: str, data: Dict[str, Any] = None, filters: Dict[str, Any] = None) -> Dict[str, Any]:
         """Execute a table operation via Supabase MCP server"""
@@ -265,8 +328,8 @@ class BanzAIDatabase:
     async def create_service(self, service: ServiceCreate) -> Service:
         """Create a new service"""
         query = """
-        INSERT INTO services (asset_id, port, protocol, service_name, service_version, banner, metadata)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO services (asset_id, port, protocol, service_name, banner)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *
         """
         params = [
@@ -274,9 +337,7 @@ class BanzAIDatabase:
             service.port,
             service.protocol,
             service.service_name,
-            service.service_version,
-            service.banner,
-            json.dumps(service.metadata)
+            service.banner
         ]
         
         result = await self._execute_query(query, {"params": params})
