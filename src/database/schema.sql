@@ -63,9 +63,7 @@ CREATE TABLE IF NOT EXISTS services (
     port INTEGER NOT NULL,
     protocol TEXT NOT NULL DEFAULT 'tcp',
     service_name TEXT,
-    service_version TEXT,
     banner TEXT,
-    metadata JSONB DEFAULT '{}',
     discovered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(asset_id, port, protocol)
 );

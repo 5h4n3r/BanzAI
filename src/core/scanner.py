@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import nmap
 import asyncio
 import time
+import socket
 from datetime import datetime
 
 class PortInfo(BaseModel):
@@ -27,6 +28,21 @@ class PortScanner:
     def __init__(self):
         self.nm = nmap.PortScanner()
     
+    def resolve_domain(self, target: str) -> str:
+        """Resolve domain to IP address"""
+        try:
+            # Check if target is already an IP address
+            socket.inet_aton(target)
+            return target
+        except socket.error:
+            # Target is a domain, resolve it
+            try:
+                ip = socket.gethostbyname(target)
+                print(f"[INFO] Resolved {target} to {ip}")
+                return ip
+            except socket.gaierror as e:
+                raise Exception(f"Failed to resolve domain {target}: {str(e)}")
+    
     async def scan_target(self, target: str, ports: str = "1-65535", 
                          scan_type: str = "tcp", timing: int = 3,
                          service_detection: bool = True, 
@@ -45,16 +61,19 @@ class PortScanner:
         start_time = time.time()
         
         try:
+            # Resolve domain to IP if needed
+            resolved_target = self.resolve_domain(target)
+            
             # Build nmap arguments
             arguments = []
             
             # Add scan type
             if scan_type == "tcp":
-                arguments.append("-sS")  # SYN scan
+                arguments.append("-sT")  # Connect scan (doesn't require privileges)
             elif scan_type == "udp":
                 arguments.append("-sU")  # UDP scan
             elif scan_type == "both":
-                arguments.append("-sS -sU")  # Both TCP and UDP
+                arguments.append("-sT -sU")  # Both TCP and UDP
             
             # Add timing
             arguments.append(f"-T{timing}")
@@ -71,15 +90,24 @@ class PortScanner:
             # Add port specification
             arguments.append(f"-p {ports}")
             
+            # Add DNS resolution and host discovery options
+            arguments.append("-n")  # No DNS resolution
+            arguments.append("-Pn")  # No ping scan
+            
             # Combine arguments
             nmap_args = " ".join(arguments)
             
-            print(f"[DEBUG] Running nmap: {nmap_args} {target}")
+            print(f"[DEBUG] Running nmap: {nmap_args} {resolved_target}")
             
             # Run the scan
-            await asyncio.to_thread(self.nm.scan, target, arguments=nmap_args)
+            print(f"[INFO] Starting nmap scan of {resolved_target} (original target: {target})")
+            await asyncio.to_thread(self.nm.scan, resolved_target, arguments=nmap_args)
             
-            scan_data = self.nm[target]
+            # Check if scan was successful
+            if resolved_target not in self.nm.all_hosts():
+                raise Exception(f"Scan failed - target {resolved_target} not found in scan results")
+            
+            scan_data = self.nm[resolved_target]
             open_ports = []
             ports_scanned = 0
             

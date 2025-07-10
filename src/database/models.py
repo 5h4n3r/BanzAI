@@ -1,8 +1,9 @@
 from typing import List, Dict, Optional, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from uuid import UUID, uuid4
 from enum import Enum
+import re
 
 # Enums for type safety
 class AssetType(str, Enum):
@@ -39,6 +40,31 @@ class FindingSeverity(str, Enum):
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
+
+# Custom datetime validator for database timestamps
+def parse_datetime(value):
+    """Parse datetime strings from database with timezone info"""
+    if isinstance(value, str):
+        # Handle PostgreSQL timestamp format: "2025-07-10 18:12:26.972016+00"
+        # Remove timezone info for now since we're storing as UTC
+        if '+' in value:
+            value = value.split('+')[0].strip()
+        elif '-' in value and value.count('-') > 2:  # Has timezone offset
+            # Split on last '-' which is the timezone separator
+            parts = value.rsplit('-', 1)
+            if len(parts) == 2:
+                value = parts[0].strip()
+        
+        # Parse the datetime
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            # Try parsing with microseconds
+            try:
+                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    return value
 
 # Base models
 class ProjectBase(BaseModel):
@@ -79,9 +105,7 @@ class ServiceBase(BaseModel):
     port: int = Field(..., ge=1, le=65535, description="Service port")
     protocol: str = Field("tcp", description="Service protocol")
     service_name: Optional[str] = Field(None, description="Service name")
-    service_version: Optional[str] = Field(None, description="Service version")
     banner: Optional[str] = Field(None, description="Service banner")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Service metadata")
 
 class WebEndpointBase(BaseModel):
     asset_id: UUID = Field(..., description="Associated asset ID")
@@ -118,6 +142,11 @@ class Project(ProjectBase):
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
 
+    @field_validator('created_at', 'updated_at', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v)
+
     class Config:
         from_attributes = True
 
@@ -125,6 +154,11 @@ class Asset(AssetBase):
     id: UUID = Field(default_factory=uuid4, description="Asset ID")
     discovered_at: datetime = Field(default_factory=datetime.utcnow, description="Discovery timestamp")
     last_updated: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
+
+    @field_validator('discovered_at', 'last_updated', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v)
 
     class Config:
         from_attributes = True
@@ -135,6 +169,11 @@ class Scan(ScanBase):
     completed_at: Optional[datetime] = Field(None, description="Completion timestamp")
     error_message: Optional[str] = Field(None, description="Error message if failed")
 
+    @field_validator('started_at', 'completed_at', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v)
+
     class Config:
         from_attributes = True
 
@@ -143,6 +182,11 @@ class Finding(FindingBase):
     created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
 
+    @field_validator('created_at', 'updated_at', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v)
+
     class Config:
         from_attributes = True
 
@@ -150,12 +194,22 @@ class Service(ServiceBase):
     id: UUID = Field(default_factory=uuid4, description="Service ID")
     discovered_at: datetime = Field(default_factory=datetime.utcnow, description="Discovery timestamp")
 
+    @field_validator('discovered_at', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v)
+
     class Config:
         from_attributes = True
 
 class WebEndpoint(WebEndpointBase):
     id: UUID = Field(default_factory=uuid4, description="Web endpoint ID")
     discovered_at: datetime = Field(default_factory=datetime.utcnow, description="Discovery timestamp")
+
+    @field_validator('discovered_at', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v)
 
     class Config:
         from_attributes = True
@@ -191,4 +245,9 @@ class ProjectSummary(BaseModel):
     scans_count: int
     findings_count: int
     created_at: datetime
-    updated_at: datetime 
+    updated_at: datetime
+
+    @field_validator('created_at', 'updated_at', mode='before')
+    @classmethod
+    def validate_datetime(cls, v):
+        return parse_datetime(v) 

@@ -23,11 +23,11 @@ class BanzAICLI:
     """Main CLI interface for BanzAI"""
     
     def __init__(self):
-        self.scan_server_url = "http://localhost:8000"
-        self.subdomain_server_url = "http://localhost:8001"
-        self.dns_server_url = "http://localhost:8002"
-        self.directory_fuzzer_url = "http://localhost:8004"
-        self.supabase_url = "http://localhost:8003"
+        self.scan_server_url = "http://banzai_scan_server:8000"
+        self.subdomain_server_url = "http://banzai_subdomain_server:8000"
+        self.dns_server_url = "http://banzai_dns_analysis_server:8000"
+        self.directory_fuzzer_url = "http://banzai_directory_fuzzer:8004"
+        self.supabase_url = "http://banzai_supabase_mcp:8003"
         
         self.session: Optional[aiohttp.ClientSession] = None
     
@@ -59,13 +59,13 @@ class BanzAICLI:
                 target_domain=target_domain
             )
             result = await db.create_project(project)
-            return result.dict()
+            return result.model_dump()
     
     async def list_projects(self) -> List[Dict]:
         """List all projects"""
         async with BanzAIDatabase(self.supabase_url) as db:
             projects = await db.list_projects()
-            return [project.dict() for project in projects]
+            return [project.model_dump() for project in projects]
     
     async def port_scan(self, target: str, project_id: Optional[str] = None, 
                        ports: str = "1-65535", scan_type: str = "quick") -> Dict:
@@ -74,14 +74,14 @@ class BanzAICLI:
         
         # Determine scan endpoint based on type
         if scan_type == "quick":
-            endpoint = f"{self.scan_server_url}/scan/quick"
-            data = {"target": target}
+            endpoint = f"{self.scan_server_url}/scan/quick?target={target}"
+            data = None
         elif scan_type == "web":
-            endpoint = f"{self.scan_server_url}/scan/web"
-            data = {"target": target}
+            endpoint = f"{self.scan_server_url}/scan/web?target={target}"
+            data = None
         elif scan_type == "database":
-            endpoint = f"{self.scan_server_url}/scan/database"
-            data = {"target": target}
+            endpoint = f"{self.scan_server_url}/scan/database?target={target}"
+            data = None
         else:
             endpoint = f"{self.scan_server_url}/scan"
             data = {
@@ -98,9 +98,12 @@ class BanzAICLI:
         if project_id and self.session:
             try:
                 async with BanzAIDatabase(self.supabase_url) as db:
+                    # Ensure project_id is a UUID
+                    project_uuid = UUID(project_id) if isinstance(project_id, str) else project_id
+                    
                     # Create asset if it doesn't exist
                     asset = AssetCreate(
-                        project_id=UUID(project_id),
+                        project_id=project_uuid,
                         type="ip" if self._is_ip(target) else "domain",
                         value=target,
                         status="scanned"
@@ -109,7 +112,7 @@ class BanzAICLI:
                     
                     # Create scan record
                     scan = ScanCreate(
-                        project_id=UUID(project_id),
+                        project_id=project_uuid,
                         asset_id=asset_result.id,
                         scan_type="port_scan",
                         status="completed",
@@ -124,7 +127,6 @@ class BanzAICLI:
                             port=port_info["port"],
                             protocol=port_info["protocol"],
                             service_name=port_info["service"],
-                            service_version=port_info.get("version"),
                             banner=port_info.get("banner")
                         )
                         await db.create_service(service)
@@ -148,9 +150,12 @@ class BanzAICLI:
         if project_id and self.session:
             try:
                 async with BanzAIDatabase(self.supabase_url) as db:
+                    # Ensure project_id is a UUID
+                    project_uuid = UUID(project_id) if isinstance(project_id, str) else project_id
+                    
                     for subdomain in result.get("subdomains", []):
                         asset = AssetCreate(
-                            project_id=UUID(project_id),
+                            project_id=project_uuid,
                             type="subdomain",
                             value=subdomain,
                             status="discovered"
@@ -196,8 +201,11 @@ class BanzAICLI:
         if project_id and self.session:
             try:
                 async with BanzAIDatabase(self.supabase_url) as db:
+                    # Ensure project_id is a UUID
+                    project_uuid = UUID(project_id) if isinstance(project_id, str) else project_id
+                    
                     # Find or create asset
-                    assets = await db.list_assets(project_id=UUID(project_id))
+                    assets = await db.list_assets(project_id=project_uuid)
                     asset = None
                     for a in assets:
                         if a.value in target or target in a.value:
@@ -206,7 +214,7 @@ class BanzAICLI:
                     
                     if not asset:
                         asset = AssetCreate(
-                            project_id=UUID(project_id),
+                            project_id=project_uuid,
                             type="url",
                             value=target,
                             status="scanned"

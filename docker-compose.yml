@@ -5,6 +5,11 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - seccomp:unconfined
     command: uvicorn mcp_servers.scan_server:app --host 0.0.0.0 --port 8000 --reload
 
   banzai_subdomain_server:
@@ -42,4 +47,14 @@ services:
       - .:/app
     environment:
       - PYTHONPATH=/app/src
-    command: python mcp_servers/directory_fuzzer_server.py 
+    command: python mcp_servers/directory_fuzzer_server.py
+
+  banzai_cli:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/src
+      - SUPABASE_PROJECT_REF=${SUPABASE_PROJECT_REF}
+      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN}
+    command: tail -f /dev/null  # Keep container running for CLI access 
