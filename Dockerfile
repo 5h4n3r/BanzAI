@@ -1,13 +1,18 @@
 FROM python:3.11-slim
 
-# Install system dependencies (no golang-go)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     nmap \
     dnsutils \
     git \
     wget \
     ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js (required for Supabase MCP server)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
 
 # Install Go 1.24.3 (latest required for Subfinder)
 ENV GOLANG_VERSION=1.24.3
@@ -29,6 +34,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
 COPY . .
+
+# Install Node.js dependencies
+RUN npm install
 
 # Expose port
 EXPOSE 8000

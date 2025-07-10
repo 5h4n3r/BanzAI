@@ -24,11 +24,13 @@ class PortScanner:
                 if scan_data['tcp'][port]['state'] == 'open':
                     open_ports.append(port)
                     services[port] = scan_data['tcp'][port]['name']
+            # Handle missing scanstats gracefully
+            timestamp = scan_data.get('scanstats', {}).get('timestr', 'Unknown')
             return ScanResult(
                 target=target,
                 ports=open_ports,
                 services=services,
-                timestamp=scan_data['scanstats']['timestr']
+                timestamp=timestamp
             )
         except Exception as e:
             raise Exception(f"Scan failed: {str(e)}") 

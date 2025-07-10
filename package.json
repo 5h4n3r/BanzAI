@@ -1,0 +1,11 @@
+{
+  "name": "banzai",
+  "version": "1.0.0",
+  "description": "AI-powered penetration testing tool with MCP servers",
+  "dependencies": {
+    "@supabase/mcp-server-supabase": "latest"
+  },
+  "scripts": {
+    "start": "echo 'BanzAI MCP servers are managed via Docker'"
+  }
+} 
