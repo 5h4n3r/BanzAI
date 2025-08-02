@@ -16,6 +16,7 @@
 ### Prerequisites
 
 - **Docker Desktop** (must be running)
+- **Python 3.11+** with UV package manager
 - **Supabase account** and project
 - **Claude Desktop** (for AI integration)
 
@@ -26,7 +27,19 @@ git clone <repository-url>
 cd defcon
 ```
 
-### 2. Configure Environment
+### 2. Install Python Dependencies
+
+```bash
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create and activate virtual environment
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -r requirements.txt
+```
+
+### 3. Configure Environment
 
 Create a `.env` file in the project root:
 
@@ -43,7 +56,7 @@ SUPABASE_MCP_URL=http://localhost:8003
 2. Navigate to Settings → API
 3. Copy your Project URL, Project Referral, Anon key and Service Role Key
 
-### 3. Start Services
+### 4. Start Services
 
 ```bash
 # Start all services (Docker Desktop must be running)
@@ -53,23 +66,65 @@ docker-compose up --build -d
 docker-compose ps
 ```
 
-### 4. Configure Claude Desktop
+### 5. Configure Claude Desktop
 
-Copy `claude_desktop_config.example` to your Claude Desktop configuration:
+Create your Claude Desktop configuration file:
 
+**On macOS:**
 ```bash
-# On macOS/Linux
-cp claude_desktop_config.example ~/.config/claude-desktop/claude_desktop_config.json
-
-# On Windows
-copy claude_desktop_config.example "%APPDATA%\Roaming\Claude\claude_desktop_config.json
+mkdir -p ~/Library/Application\ Support/Claude
 ```
 
-**Edit the config file:**
-- Replace `YOUR_PYTHON_PATH_HERE` with your Python path (e.g., `/path/to/project/.venv/bin/python`)
-- Replace `YOUR_PROJECT_PATH_HERE` with your project path (e.g., `/path/to/project`)
+**On Windows:**
+```bash
+# The config file should be in: %APPDATA%\Roaming\Claude\claude_desktop_config.json
+```
 
-### 5. Start Reconnaissance
+**Create the config file with this content:**
+
+```json
+{
+  "mcpServers": {
+    "banzai-port-scanner": {
+      "command": "/path/to/your/project/.venv/bin/python",
+      "args": ["/path/to/your/project/mcp_servers/port_scanner_mcp.py"]
+    },
+    "banzai-supabase": {
+      "command": "/path/to/your/project/.venv/bin/python",
+      "args": ["/path/to/your/project/mcp_servers/supabase_mcp.py"]
+    },
+    "banzai-dns-analysis": {
+      "command": "/path/to/your/project/.venv/bin/python",
+      "args": ["/path/to/your/project/mcp_servers/dns_analysis_mcp.py"]
+    },
+    "banzai-subdomain": {
+      "command": "/path/to/your/project/.venv/bin/python",
+      "args": ["/path/to/your/project/mcp_servers/subdomain_mcp.py"]
+    },
+    "banzai-directory-fuzzer": {
+      "command": "/path/to/your/project/.venv/bin/python",
+      "args": ["/path/to/your/project/mcp_servers/directory_fuzzer_mcp.py"]
+    }
+  }
+}
+```
+
+**Replace the paths with your actual project location:**
+
+**macOS example:**
+```json
+"command": "/Users/username/Tools/BanzAI/.venv/bin/python",
+"args": ["/Users/username/Tools/Banzai/mcp_servers/port_scanner_mcp.py"]
+```
+
+**Windows example:**
+```json
+"command": "C:/Users/Shane-PC/Cursor/defcon/.venv/Scripts/python.exe",
+"args": ["C:/Users/Shane-PC/Cursor/defcon/mcp_servers/port_scanner_mcp.py"]
+
+```
+
+### 6. Start Reconnaissance
 
 Ask Claude to perform reconnaissance tasks:
 - "Scan ports on example.com"
@@ -100,18 +155,25 @@ Once configured, Claude Desktop will have access to these tools:
 
 BanzAI uses a two-layer architecture:
 
-### HTTP API Servers (Backend)
+### HTTP API Servers (Docker Backend)
 - **Port Scanner API** (`port_scanner_api.py`) - nmap-based scanning
 - **Subdomain API** (`subdomain_api.py`) - subdomain enumeration
 - **DNS Analysis API** (`dns_analysis_api.py`) - DNS reconnaissance
 - **Directory Fuzzer API** (`directory_fuzzer_api.py`) - web path discovery
 - **Supabase API** (`supabase_api.py`) - database operations
 
-### MCP Servers (Claude Desktop Adapters)
+### MCP Servers (Python Adapters)
 - `port_scanner_mcp.py` - Port scanning tools for Claude
 - `subdomain_mcp.py` - Subdomain enumeration tools
 - `dns_analysis_mcp.py` - DNS analysis tools
 - `directory_fuzzer_mcp.py` - Directory fuzzing tools
+- `supabase_mcp.py` - Database operations
+
+**How it works:**
+1. **Claude Desktop** → **Python MCP scripts** (on your machine)
+2. **Python scripts** → **HTTP API calls** to Docker containers
+3. **Docker containers** → **Perform actual scanning**
+4. **Results** → **Flow back through the chain**
 - `supabase_mcp.py` - Database operations
 
 ### Docker Services
