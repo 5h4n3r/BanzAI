@@ -1,4 +1,4 @@
-# 🚀 BanzAI - AI-Powered Penetration Testing Tool
+# 🚀 BanzAI - AI-Powered External Attack Surface Testing Tool
 
 **BanzAI** combines reconnaissance tools with AI-driven analysis through Claude Desktop integration. Built with a microservices architecture, it provides security testing capabilities with data storage.
 
