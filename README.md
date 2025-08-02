@@ -16,15 +16,8 @@
 ### Prerequisites
 
 - **Docker Desktop** (must be running)
-- **Python 3.11+** with UV package manager
 - **Supabase account** and project
 - **Claude Desktop** (for AI integration)
-
-### System Requirements
-
-- **RAM**: Minimum 8GB, recommended 12GB+
-- **Storage**: 2GB free space
-- **Network**: Internet connection for tool downloads and Supabase
 
 ### 1. Clone and Setup
 
@@ -33,19 +26,7 @@ git clone <repository-url>
 cd defcon
 ```
 
-### 2. Install UV and Create Virtual Environment
-
-```bash
-# Install UV (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Create and activate virtual environment
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
-```
-
-### 3. Configure Environment
+### 2. Configure Environment
 
 Create a `.env` file in the project root:
 
@@ -60,9 +41,9 @@ SUPABASE_MCP_URL=http://localhost:8003
 **Get your Supabase credentials:**
 1. Go to [supabase.com](https://supabase.com) and create a project
 2. Navigate to Settings → API
-3. Copy your Project URL and Service Role Key
+3. Copy your Project URL, Project Referral, Anon key and Service Role Key
 
-### 4. Start Services
+### 3. Start Services
 
 ```bash
 # Start all services (Docker Desktop must be running)
@@ -72,7 +53,7 @@ docker-compose up --build -d
 docker-compose ps
 ```
 
-### 5. Configure Claude Desktop
+### 4. Configure Claude Desktop
 
 Copy `claude_desktop_config.example` to your Claude Desktop configuration:
 
@@ -87,6 +68,14 @@ copy claude_desktop_config.example "%APPDATA%\Roaming\Claude\claude_desktop_conf
 **Edit the config file:**
 - Replace `YOUR_PYTHON_PATH_HERE` with your Python path (e.g., `/path/to/project/.venv/bin/python`)
 - Replace `YOUR_PROJECT_PATH_HERE` with your project path (e.g., `/path/to/project`)
+
+### 5. Start Reconnaissance
+
+Ask Claude to perform reconnaissance tasks:
+- "Scan ports on example.com"
+- "Find subdomains for example.com"
+- "Analyze DNS for example.com"
+- "Fuzz directories on https://example.com"
 
 ## 📖 Usage
 
@@ -107,37 +96,6 @@ Once configured, Claude Desktop will have access to these tools:
 "Enumerate subdomains for test.com"
 "Analyze DNS records for demo.org"
 "Fuzz directories on https://example.com"
-```
-
-### Command Line Interface
-
-For direct tool usage without Claude:
-
-```bash
-# Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Full reconnaissance workflow
-python src/cli_main.py recon example.com "Example Project"
-
-# Quick port scan
-python src/cli_main.py scan 192.168.1.1 --type quick
-
-# SYN scan (requires privileges)
-python src/cli_main.py scan 192.168.1.1 --type syn --ports 1-1000
-
-# Subdomain enumeration
-python src/cli_main.py subdomains example.com
-
-# DNS analysis
-python src/cli_main.py dns example.com
-
-# Directory fuzzing
-python src/cli_main.py fuzz https://example.com --wordlist common
-
-# Project management
-python src/cli_main.py projects --list
-python src/cli_main.py projects --create "New Project" --target example.com
 ```
 
 BanzAI uses a two-layer architecture:
@@ -171,23 +129,16 @@ The `docker-compose.yml` defines these services:
 
 **Docker services won't start:**
 - Ensure Docker Desktop is running
-- Check available RAM (need 4GB+)
 - Verify ports 8000-8004 are not in use
 
 **Claude Desktop can't connect:**
 - Verify Python path in config is correct
-- Ensure virtual environment is activated
 - Check that MCP servers are running (`docker-compose ps`)
 
 **Supabase connection errors:**
 - Verify `.env` file exists and has correct credentials
 - Check Supabase project is active
 - Ensure service role key has proper permissions
-
-**Port scan fails:**
-- SYN scans require root/administrator privileges
-- Check target is reachable
-- Verify nmap is installed in container
 
 ### Logs and Debugging
 
