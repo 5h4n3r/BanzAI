@@ -474,7 +474,7 @@ class BanzAIDatabase:
         findings = await self.list_findings(project_id=project_id)
         
         return ProjectResponse(
-            **project.dict(),
+            **project.model_dump(),
             assets_count=len(assets),
             scans_count=len(scans),
             findings_count=len(findings)
@@ -492,7 +492,7 @@ class BanzAIDatabase:
         findings = await self.list_findings(project_id=asset.project_id)
         
         return AssetResponse(
-            **asset.dict(),
+            **asset.model_dump(),
             scans=scans,
             services=services,
             web_endpoints=web_endpoints,

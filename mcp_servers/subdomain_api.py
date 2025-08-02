@@ -5,18 +5,24 @@ import json
 from typing import List, Dict
 import subprocess
 from pathlib import Path
+import uvicorn
 
 app = FastAPI()
 
 class EnumRequest(BaseModel):
     domain: str
     threads: int = 10
-    timeout: int = 30
+    timeout: int = 240
 
 class SubdomainResult(BaseModel):
     domain: str
     subdomains: List[str]
     dns_records: Dict[str, List[str]]
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "service": "subdomain_enumerator"}
 
 @app.post("/enumerate")
 async def enumerate_subdomains(request: EnumRequest):
@@ -34,6 +40,8 @@ async def enumerate_subdomains(request: EnumRequest):
             "-o", str(subfinder_output)
         ]
         
+        print(f"[DEBUG] Running subfinder with command: {' '.join(subfinder_cmd)}")
+        
         # Run DNSX on subfinder results
         dnsx_cmd = [
             "dnsx",
@@ -42,6 +50,8 @@ async def enumerate_subdomains(request: EnumRequest):
             "-json",
             "-o", str(dnsx_output)
         ]
+        
+        print(f"[DEBUG] Running dnsx with command: {' '.join(dnsx_cmd)}")
         
         # Execute commands
         subfinder_process = await asyncio.create_subprocess_exec(
@@ -100,4 +110,7 @@ async def enumerate_subdomains(request: EnumRequest):
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8001) 
