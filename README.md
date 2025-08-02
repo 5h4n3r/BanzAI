@@ -82,47 +82,63 @@ mkdir -p ~/Library/Application\ Support/Claude
 
 **Create the config file with this content:**
 
+**macOS config:**
 ```json
 {
   "mcpServers": {
     "banzai-port-scanner": {
-      "command": "/path/to/your/project/.venv/bin/python",
-      "args": ["/path/to/your/project/mcp_servers/port_scanner_mcp.py"]
+      "command": "/Users/username/Tools/BanzAI/.venv/bin/python",
+      "args": ["/Users/username/Tools/BanzAI/mcp_servers/port_scanner_mcp.py"]
     },
     "banzai-supabase": {
-      "command": "/path/to/your/project/.venv/bin/python",
-      "args": ["/path/to/your/project/mcp_servers/supabase_mcp.py"]
+      "command": "/Users/username/Tools/BanzAI/.venv/bin/python",
+      "args": ["/Users/username/Tools/BanzAI/mcp_servers/supabase_mcp.py"]
     },
     "banzai-dns-analysis": {
-      "command": "/path/to/your/project/.venv/bin/python",
-      "args": ["/path/to/your/project/mcp_servers/dns_analysis_mcp.py"]
+      "command": "/Users/username/Tools/BanzAI/.venv/bin/python",
+      "args": ["/Users/username/Tools/BanzAI/mcp_servers/dns_analysis_mcp.py"]
     },
     "banzai-subdomain": {
-      "command": "/path/to/your/project/.venv/bin/python",
-      "args": ["/path/to/your/project/mcp_servers/subdomain_mcp.py"]
+      "command": "/Users/username/Tools/BanzAI/.venv/bin/python",
+      "args": ["/Users/username/Tools/BanzAI/mcp_servers/subdomain_mcp.py"]
     },
     "banzai-directory-fuzzer": {
-      "command": "/path/to/your/project/.venv/bin/python",
-      "args": ["/path/to/your/project/mcp_servers/directory_fuzzer_mcp.py"]
+      "command": "/Users/username/Tools/BanzAI/.venv/bin/python",
+      "args": ["/Users/username/Tools/BanzAI/mcp_servers/directory_fuzzer_mcp.py"]
     }
   }
 }
 ```
 
-**Replace the paths with your actual project location:**
-
-**macOS example:**
+**Windows config:**
 ```json
-"command": "/Users/username/Tools/BanzAI/.venv/bin/python",
-"args": ["/Users/username/Tools/Banzai/mcp_servers/port_scanner_mcp.py"]
+{
+  "mcpServers": {
+    "banzai-port-scanner": {
+      "command": "C:/Users/username/Tools/BanzAI/.venv/Scripts/python.exe",
+      "args": ["C:/Users/username/Tools/BanzAI/mcp_servers/port_scanner_mcp.py"]
+    },
+    "banzai-supabase": {
+      "command": "C:/Users/username/Tools/BanzAI/.venv/Scripts/python.exe",
+      "args": ["C:/Users/username/Tools/BanzAI/mcp_servers/supabase_mcp.py"]
+    },
+    "banzai-dns-analysis": {
+      "command": "C:/Users/username/Tools/BanzAI/.venv/Scripts/python.exe",
+      "args": ["C:/Users/username/Tools/BanzAI/mcp_servers/dns_analysis_mcp.py"]
+    },
+    "banzai-subdomain": {
+      "command": "C:/Users/username/Tools/BanzAI/.venv/Scripts/python.exe",
+      "args": ["C:/Users/username/Tools/BanzAI/mcp_servers/subdomain_mcp.py"]
+    },
+    "banzai-directory-fuzzer": {
+      "command": "C:/Users/username/Tools/BanzAI/.venv/Scripts/python.exe",
+      "args": ["C:/Users/username/Tools/BanzAI/mcp_servers/directory_fuzzer_mcp.py"]
+    }
+  }
+}
 ```
 
-**Windows example:**
-```json
-"command": "C:/Users/Shane-PC/Cursor/defcon/.venv/Scripts/python.exe",
-"args": ["C:/Users/Shane-PC/Cursor/defcon/mcp_servers/port_scanner_mcp.py"]
-
-```
+**Replace `username` with your actual username and adjust the project path as needed.**
 
 ### 6. Start Reconnaissance
 
