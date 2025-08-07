@@ -5,9 +5,10 @@ RUN apt-get update && apt-get install -y \
     nmap \
     dnsutils \
     git \
-    wget \
     ca-certificates \
     curl \
+    wget \
+    ffuf \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js (required for Supabase MCP server)
@@ -20,11 +21,24 @@ RUN wget https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
     rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH="/usr/local/go/bin:/root/go/bin:${PATH}"
+ENV GOPROXY=direct
+ENV GOSUMDB=off
 
-# Install Subfinder, DNSX, and ffuf
-RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-RUN go install -v github.com/ffuf/ffuf@latest
+# Install Subfinder, DNSX, and ffuf with retry logic
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest || \
+    (sleep 5 && go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest)
+RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest || \
+    (sleep 5 && go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest)
+RUN go install -v github.com/ffuf/ffuf@latest || \
+    (sleep 5 && go install -v github.com/ffuf/ffuf@latest)
+
+# Install SecLists Discovery folder - web content wordlists
+RUN mkdir -p /usr/share/seclists && \
+    cd /usr/share/seclists && \
+    git clone --depth 1 --filter=blob:none --sparse https://github.com/danielmiessler/SecLists.git . && \
+    git sparse-checkout set Discovery && \
+    mkdir -p /usr/share/wordlists && \
+    ln -s /usr/share/seclists /usr/share/wordlists/seclists
 
 # Set working directory
 WORKDIR /app

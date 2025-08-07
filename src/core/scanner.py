@@ -46,14 +46,15 @@ class PortScanner:
     async def scan_target(self, target: str, ports: str = "1-65535", 
                          scan_type: str = "tcp", timing: int = 3,
                          service_detection: bool = True, 
-                         script_scan: Optional[List[str]] = None) -> ScanResult:
+                         script_scan: Optional[List[str]] = None,
+                         timeout: int = 300) -> ScanResult:
         """
         Enhanced port scanning with multiple options
         
         Args:
             target: Target IP or hostname
             ports: Port range or list (e.g., "1-1000", "80,443,8080")
-            scan_type: "tcp", "udp", or "both"
+            scan_type: "tcp", "udp", "syn", or "both"
             timing: Timing template (0-5, higher = faster)
             service_detection: Enable service/version detection
             script_scan: List of NSE scripts to run
@@ -70,6 +71,8 @@ class PortScanner:
             # Add scan type
             if scan_type == "tcp":
                 arguments.append("-sT")  # Connect scan (doesn't require privileges)
+            elif scan_type == "syn":
+                arguments.append("-sS")  # SYN scan (requires privileges)
             elif scan_type == "udp":
                 arguments.append("-sU")  # UDP scan
             elif scan_type == "both":
@@ -94,14 +97,26 @@ class PortScanner:
             arguments.append("-n")  # No DNS resolution
             arguments.append("-Pn")  # No ping scan
             
+            # Add timeout and rate limiting for better performance
+            arguments.append(f"--max-retries=2")  # Reduce retries
+            if ports == "1-1000" or ports == "1-65535":
+                # For large port ranges, use min-rate to speed up scanning
+                arguments.append("--min-rate=1000")
+            arguments.append(f"--host-timeout={timeout}s")  # Host timeout
+            
             # Combine arguments
             nmap_args = " ".join(arguments)
             
-            print(f"[DEBUG] Running nmap: {nmap_args} {resolved_target}")
-            
-            # Run the scan
+            # Run the scan with timeout
             print(f"[INFO] Starting nmap scan of {resolved_target} (original target: {target})")
-            await asyncio.to_thread(self.nm.scan, resolved_target, arguments=nmap_args)
+            print(f"[DEBUG] Running nmap with command: nmap {nmap_args} {resolved_target}")
+            try:
+                await asyncio.wait_for(
+                    asyncio.to_thread(self.nm.scan, resolved_target, arguments=nmap_args),
+                    timeout=timeout
+                )
+            except asyncio.TimeoutError:
+                raise Exception(f"Scan timed out after {timeout} seconds")
             
             # Check if scan was successful
             if resolved_target not in self.nm.all_hosts():

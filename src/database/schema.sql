@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS findings (
     asset_id UUID REFERENCES assets(id) ON DELETE CASCADE,
     scan_id UUID REFERENCES scans(id) ON DELETE CASCADE,
     severity TEXT NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-    category TEXT NOT NULL,
+    category TEXT NOT NULL CHECK (category IN ('open_service', 'web_discovery', 'dns_infrastructure', 'dns_security', 'dns_vulnerability', 'email_security')),
     title TEXT NOT NULL,
     description TEXT,
     evidence JSONB DEFAULT '{}',
@@ -83,6 +83,32 @@ CREATE TABLE IF NOT EXISTS web_endpoints (
     UNIQUE(asset_id, path, method)
 );
 
+-- Vulnerabilities table - Store detailed vulnerability scan results
+CREATE TABLE IF NOT EXISTS vulnerabilities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+    asset_id UUID REFERENCES assets(id) ON DELETE CASCADE,
+    scan_id UUID REFERENCES scans(id) ON DELETE CASCADE,
+    template_id TEXT NOT NULL,
+    template_url TEXT,
+    type TEXT NOT NULL,
+    host TEXT NOT NULL,
+    matched_at TEXT,
+    severity TEXT NOT NULL CHECK (severity IN ('critical', 'high', 'medium', 'low', 'info')),
+    description TEXT,
+    reference TEXT[],
+    tags TEXT[],
+    cve_ids TEXT[],
+    cvss_metrics JSONB,
+    classification JSONB,
+    metadata JSONB,
+    matcher_status BOOLEAN,
+    extracted_results TEXT[],
+    evidence JSONB DEFAULT '{}',
+    discovered_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(asset_id, template_id, host)
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_assets_project_id ON assets(project_id);
 CREATE INDEX IF NOT EXISTS idx_assets_type ON assets(type);
@@ -90,8 +116,13 @@ CREATE INDEX IF NOT EXISTS idx_scans_project_id ON scans(project_id);
 CREATE INDEX IF NOT EXISTS idx_scans_asset_id ON scans(asset_id);
 CREATE INDEX IF NOT EXISTS idx_findings_project_id ON findings(project_id);
 CREATE INDEX IF NOT EXISTS idx_findings_severity ON findings(severity);
+CREATE INDEX IF NOT EXISTS idx_findings_category ON findings(category);
 CREATE INDEX IF NOT EXISTS idx_services_asset_id ON services(asset_id);
 CREATE INDEX IF NOT EXISTS idx_web_endpoints_asset_id ON web_endpoints(asset_id);
+CREATE INDEX IF NOT EXISTS idx_vulnerabilities_project_id ON vulnerabilities(project_id);
+CREATE INDEX IF NOT EXISTS idx_vulnerabilities_asset_id ON vulnerabilities(asset_id);
+CREATE INDEX IF NOT EXISTS idx_vulnerabilities_severity ON vulnerabilities(severity);
+CREATE INDEX IF NOT EXISTS idx_vulnerabilities_template_id ON vulnerabilities(template_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()

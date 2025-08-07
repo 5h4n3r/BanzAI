@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "banzai-port-scanner": {
+      "command": "YOUR_PYTHON_PATH_HERE",
+      "args": ["YOUR_PROJECT_PATH_HERE/mcp_servers/port_scanner_mcp.py"]
+    },
+    "banzai-supabase": {
+      "command": "YOUR_PYTHON_PATH_HERE",
+      "args": ["YOUR_PROJECT_PATH_HERE/mcp_servers/supabase_mcp.py"]
+    },
+    "banzai-dns-analysis": {
+      "command": "YOUR_PYTHON_PATH_HERE",
+      "args": ["YOUR_PROJECT_PATH_HERE/mcp_servers/dns_analysis_mcp.py"]
+    },
+    "banzai-subdomain": {
+      "command": "YOUR_PYTHON_PATH_HERE",
+      "args": ["YOUR_PROJECT_PATH_HERE/mcp_servers/subdomain_mcp.py"]
+    },
+    "banzai-directory-fuzzer": {
+      "command": "YOUR_PYTHON_PATH_HERE",
+      "args": ["YOUR_PROJECT_PATH_HERE/mcp_servers/directory_fuzzer_mcp.py"]
+    }
+  }
+} 

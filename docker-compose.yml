@@ -5,28 +5,36 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+    command: python mcp_servers/port_scanner_api.py
+    privileged: true
     cap_add:
-      - NET_ADMIN
       - NET_RAW
-    security_opt:
-      - seccomp:unconfined
-    command: uvicorn mcp_servers.scan_server:app --host 0.0.0.0 --port 8000 --reload
+      - NET_ADMIN
 
   banzai_subdomain_server:
     build: .
     ports:
-      - "8001:8000"
+      - "8001:8001"
     volumes:
       - .:/app
-    command: uvicorn mcp_servers.subdomain_server:app --host 0.0.0.0 --port 8000 --reload
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+    command: python mcp_servers/subdomain_api.py
 
   banzai_dns_analysis_server:
     build: .
     ports:
-      - "8002:8000"
+      - "8002:8002"
     volumes:
       - .:/app
-    command: uvicorn mcp_servers.dns_analysis_server:app --host 0.0.0.0 --port 8000 --reload
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+    command: python mcp_servers/dns_analysis_api.py
 
   banzai_supabase_mcp:
     build: .
@@ -34,10 +42,14 @@ services:
       - "8003:8003"
     volumes:
       - .:/app
+    working_dir: /app
+    env_file:
+      - .env
     environment:
-      - SUPABASE_PROJECT_REF=${SUPABASE_PROJECT_REF}
-      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN}
-    command: uvicorn mcp_servers.supabase_mcp_wrapper:app --host 0.0.0.0 --port 8003 --reload
+      - PYTHONPATH=/app
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    command: python mcp_servers/supabase_api.py
 
   banzai_directory_fuzzer:
     build: .
@@ -45,16 +57,7 @@ services:
       - "8004:8004"
     volumes:
       - .:/app
+    working_dir: /app
     environment:
-      - PYTHONPATH=/app/src
-    command: python mcp_servers/directory_fuzzer_server.py
-
-  banzai_cli:
-    build: .
-    volumes:
-      - .:/app
-    environment:
-      - PYTHONPATH=/app/src
-      - SUPABASE_PROJECT_REF=${SUPABASE_PROJECT_REF}
-      - SUPABASE_ACCESS_TOKEN=${SUPABASE_ACCESS_TOKEN}
-    command: tail -f /dev/null  # Keep container running for CLI access 
+      - PYTHONPATH=/app
+    command: python mcp_servers/directory_fuzzer_api.py 
