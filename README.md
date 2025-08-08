@@ -4,10 +4,10 @@
 
 ## 🌟 Core Features
 
-- **Port Scanning**: Advanced nmap-based scanning with SYN scan support
+- **Port Scanning**: nmap-based scanning with SYN scan support
 - **Subdomain Enumeration**: Comprehensive subdomain discovery
-- **DNS Analysis**: Deep DNS reconnaissance and analysis
-- **Directory Fuzzing**: Web path discovery using ffuf (in progress)
+- **DNS Analysis**: DNS reconnaissance and analysis
+- **Directory Fuzzing**: Web path discovery using ffuf (results may very)
 - **Data Persistence**: Supabase PostgreSQL database integration
 - **Claude Desktop Integration**: AI-powered analysis and workflow automation
 
